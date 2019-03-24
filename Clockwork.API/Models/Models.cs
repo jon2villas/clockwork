@@ -7,9 +7,14 @@ namespace Clockwork.API.Models
     {
         public DbSet<CurrentTimeQuery> CurrentTimeQueries { get; set; }
 
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        public ClockworkContext()
         {
-            optionsBuilder.UseSqlite("Data Source=clockwork.db");
+
+        }
+
+        public ClockworkContext(DbContextOptions<ClockworkContext> contextOptions) : base(contextOptions)
+        {
+
         }
     }
 

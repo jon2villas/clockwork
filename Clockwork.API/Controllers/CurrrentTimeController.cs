@@ -7,6 +7,13 @@ namespace Clockwork.API.Controllers
     [Route("api/[controller]")]
     public class CurrentTimeController : Controller
     {
+        private readonly ClockworkContext _context = null;
+
+        public CurrentTimeController(ClockworkContext context)
+        {
+            _context = context;
+        }
+
         // GET api/currenttime
         [HttpGet]
         public IActionResult Get()
@@ -22,17 +29,14 @@ namespace Clockwork.API.Controllers
                 Time = serverTime
             };
 
-            using (var db = new ClockworkContext())
-            {
-                db.CurrentTimeQueries.Add(returnVal);
-                var count = db.SaveChanges();
-                Console.WriteLine("{0} records saved to database", count);
+            _context.CurrentTimeQueries.Add(returnVal);
+            var count = _context.SaveChanges();
+            Console.WriteLine("{0} records saved to database", count);
 
-                Console.WriteLine();
-                foreach (var CurrentTimeQuery in db.CurrentTimeQueries)
-                {
-                    Console.WriteLine(" - {0}", CurrentTimeQuery.UTCTime);
-                }
+            Console.WriteLine();
+            foreach (var currentTimeQuery in _context.CurrentTimeQueries)
+            {
+                Console.WriteLine(" - {0}", currentTimeQuery.UTCTime);
             }
 
             return Ok(returnVal);
