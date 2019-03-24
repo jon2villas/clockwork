@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using Clockwork.API.Models;
 
@@ -40,6 +41,16 @@ namespace Clockwork.API.Controllers
             }
 
             return Ok(returnVal);
+        }
+
+        [HttpGet, Route("Queries")]
+        public IActionResult GetQueries()
+        {
+            var currentTimeQueries = _context.CurrentTimeQueries
+                .OrderByDescending(ctq => ctq.CurrentTimeQueryId)
+                .ToList();
+
+            return Ok(currentTimeQueries);
         }
     }
 }

@@ -1,21 +1,51 @@
 ﻿<script>
-function UserAction() {
-    var xhttp = new XMLHttpRequest();
-    xhttp.onreadystatechange = function() {
-        if (this.readyState == 4 && this.status == 200) {
-            document.getElementById("output").innerHTML = this.responseText;
-        }
-    };
-    xhttp.open("GET", "http://localhost:5000/api/currenttime", true);
-    xhttp.setRequestHeader("Content-type", "application/json");
-    xhttp.send();
+    let apiBaseUrl = "http://localhost:5000/api";
 
-}
+    $(document).ready(() => {
+        $.get(`${apiBaseUrl}/currenttime/queries`, (data, status) => {
+            if (status === "success") {
+                let currentTimeQueries = data.map(currentTimeQuery =>
+                    `<tr>
+                        <td>${currentTimeQuery.currentTimeQueryId}</td>
+                        <td>${moment(currentTimeQuery.utcTime).format("LLL")}</td>
+                        <td>${moment(currentTimeQuery.time).format("LLL")}</td>
+                        <td>${currentTimeQuery.clientIp}</td>
+                    </tr>`)
+                    .join();
+
+                $("#currentTimeQueries > tbody").append(currentTimeQueries);
+            }
+        });
+    });
+
+    function getCurrentTime() {
+        $.get(`${apiBaseUrl}/currenttime`, (data, status) => {
+            if (status === "success") {
+                $("#currentTime").html(moment(data.time).format("LLL"));
+            }
+        });
+    }
 </script>
 
-<h2>AWH Clockwork Project @ViewData["Version"] on @ViewData["Runtime"]!</h2>
-
-
-<button type="submit" onclick="UserAction()">Get the time</button>
-
-<p id="output"></p>
+<div class="container">
+    <h2>AWH Clockwork Project @ViewData["Version"] on @ViewData["Runtime"]!</h2>
+    <div class="form-row mb-2">
+        <div class="col-auto">
+            <button type="button" class="btn btn-primary" onclick="getCurrentTime()">Get Current Time</button>
+        </div>
+        <div class="col-auto">
+            <span id="currentTime"></span>
+        </div>
+    </div>
+    <table id="currentTimeQueries" class="table table-bordered">
+        <thead>
+            <tr>
+                <th scope="col">Id</th>
+                <th scope="col">Time (UTC)</th>
+                <th scope="col">Time</th>
+                <th scope="col">IP</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
