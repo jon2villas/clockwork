@@ -17,27 +17,31 @@ namespace Clockwork.API.Controllers
 
         // GET api/currenttime
         [HttpGet]
-        public IActionResult Get()
+        public IActionResult Get(string timeZoneId)
         {
             var utcTime = DateTime.UtcNow;
-            var serverTime = DateTime.Now;
+            var timeZone = !string.IsNullOrWhiteSpace(timeZoneId)
+                ? TimeZoneInfo.FindSystemTimeZoneById(timeZoneId)
+                : TimeZoneInfo.Local;
+            var serverTime = TimeZoneInfo.ConvertTime(utcTime, timeZone);
             var ip = this.HttpContext.Connection.RemoteIpAddress.ToString();
 
             var returnVal = new CurrentTimeQuery
             {
                 UTCTime = utcTime,
                 ClientIp = ip,
-                Time = serverTime
+                Time = serverTime,
+                TimeZone = timeZone.DisplayName
             };
 
             _context.CurrentTimeQueries.Add(returnVal);
             var count = _context.SaveChanges();
-            Console.WriteLine("{0} records saved to database", count);
+            Console.WriteLine($"{count} records saved to database");
 
             Console.WriteLine();
             foreach (var currentTimeQuery in _context.CurrentTimeQueries)
             {
-                Console.WriteLine(" - {0}", currentTimeQuery.UTCTime);
+                Console.WriteLine($" - {currentTimeQuery.UTCTime}");
             }
 
             return Ok(returnVal);
@@ -51,6 +55,15 @@ namespace Clockwork.API.Controllers
                 .ToList();
 
             return Ok(currentTimeQueries);
+        }
+
+        [HttpGet, Route("TimeZones")]
+        public IActionResult GetTimeZones()
+        {
+            var timeZones = TimeZoneInfo.GetSystemTimeZones()
+                .Select(tz => new { tz.Id, tz.DisplayName });
+
+            return Ok(timeZones);
         }
     }
 }

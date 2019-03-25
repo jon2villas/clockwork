@@ -2,13 +2,30 @@
     let apiBaseUrl = "http://localhost:5000/api";
 
     $(document).ready(() => {
+        $("#timeZones").append($("<option>",
+            {
+                value: "",
+                text: "Select Time Zone",
+                selected: true
+            }));
+
+        $.get(`${apiBaseUrl}/currenttime/timezones`, (data, status) => {
+            if (status === "success") {
+                let timeZones = data.map(timeZone => `<option value="${timeZone.id}">${timeZone.displayName}</option>`)
+                    .join();
+
+                $("#timeZones").append(timeZones);
+            }
+        });
+
         $.get(`${apiBaseUrl}/currenttime/queries`, (data, status) => {
             if (status === "success") {
                 let currentTimeQueries = data.map(currentTimeQuery =>
                     `<tr>
                         <td>${currentTimeQuery.currentTimeQueryId}</td>
-                        <td>${moment(currentTimeQuery.utcTime).format("LLL")}</td>
-                        <td>${moment(currentTimeQuery.time).format("LLL")}</td>
+                        <td>${currentTimeQuery.utcTime}</td>
+                        <td>${currentTimeQuery.time}</td>
+                        <td>${currentTimeQuery.timeZone}</td>
                         <td>${currentTimeQuery.clientIp}</td>
                     </tr>`)
                     .join();
@@ -19,22 +36,33 @@
     });
 
     function getCurrentTime() {
-        $.get(`${apiBaseUrl}/currenttime`, (data, status) => {
+        let timeZoneId = $("#timeZones").val();
+
+        $.get(`${apiBaseUrl}/currenttime?timeZoneId=${timeZoneId}`, (data, status) => {
             if (status === "success") {
-                $("#currentTime").html(moment(data.time).format("LLL"));
+                let currentTimeQuery =
+                    `<tr>
+                        <td>${data.currentTimeQueryId}</td>
+                        <td>${data.utcTime}</td>
+                        <td>${data.time}</td>
+                        <td>${data.timeZone}</td>
+                        <td>${data.clientIp}</td>
+                    </tr>`;
+
+                $("#currentTimeQueries > tbody").prepend(currentTimeQuery);
             }
         });
     }
 </script>
 
-<div class="container">
+<div class="container-fluid">
     <h2>AWH Clockwork Project @ViewData["Version"] on @ViewData["Runtime"]!</h2>
     <div class="form-row mb-2">
         <div class="col-auto">
             <button type="button" class="btn btn-primary" onclick="getCurrentTime()">Get Current Time</button>
         </div>
         <div class="col-auto">
-            <span id="currentTime"></span>
+            <select id="timeZones" class="form-control"></select>
         </div>
     </div>
     <table id="currentTimeQueries" class="table table-bordered">
@@ -43,6 +71,7 @@
                 <th scope="col">Id</th>
                 <th scope="col">Time (UTC)</th>
                 <th scope="col">Time</th>
+                <th scope="col">Time Zone</th>
                 <th scope="col">IP</th>
             </tr>
         </thead>
